@@ -8,6 +8,7 @@ mutation_rate = 0.1
 crossover_rate = 0.5
 num_generations = 100
 
+
 # Klasse zur Repräsentation einer Route
 class Route:
     def __init__(self, cities):
@@ -24,11 +25,13 @@ class Route:
             total_distance += np.linalg.norm(np.array(city1) - np.array(city2))
         return total_distance
 
+
 # Erzeugung einer zufälligen Route
 def generate_random_route(cities):
     route = Route(cities)
     random.shuffle(route.cities)
     return route
+
 
 # Erzeugung einer zufälligen Population von Routen
 def generate_random_population(cities, population_size):
@@ -38,6 +41,7 @@ def generate_random_population(cities, population_size):
         population.append(route)
     return population
 
+
 # Selektion von Eltern für die Rekombination
 def selection(population, tournament_size):
     selected_parents = []
@@ -46,6 +50,7 @@ def selection(population, tournament_size):
         winner = min(tournament, key=lambda route: route.distance)
         selected_parents.append(winner)
     return selected_parents
+
 
 # Rekombination zweier Routen
 def crossover(parent1, parent2):
@@ -57,18 +62,36 @@ def crossover(parent1, parent2):
     child1[start_index:end_index] = parent1.cities[start_index:end_index]
     child2[start_index:end_index] = parent2.cities[start_index:end_index]
     index = end_index % len(cities)
-    while None in child1:
-        city = parent2.cities[index]
-        if city not in child1:
-            child1[child1.index(None)] = city
+    max_attempts = len(cities)
+
+    for _ in range(max_attempts):
+        if None not in child1 and None not in child2:
+            break
+
+        city1 = parent2.cities[index]
+        city2 = parent1.cities[index]
+
+        if None in child1:
+            if city1 not in child1:
+                child1[child1.index(None)] = city1
+
+        if None in child2:
+            if city2 not in child2:
+                child2[child2.index(None)] = city2
+
         index = (index + 1) % len(cities)
-    index = end_index % len(cities)
-    while None in child2:
-        city = parent1.cities[index]
-        if city not in child2:
-            child2[child2.index(None)] = city
-        index = (index + 1) % len(cities)
+
+    # Überprüfung und Ersatz von None-Werten
+    for i in range(len(child1)):
+        if child1[i] is None:
+            child1[i] = random.choice([city for city in cities if city not in child1])
+        if child2[i] is None:
+            child2[i] = random.choice([city for city in cities if city not in child2])
+
     return Route(child1), Route(child2)
+
+
+
 
 # Mutation einer Route durch Vertauschen zweier Städte
 def mutation(route, mutation_rate):
@@ -77,6 +100,7 @@ def mutation(route, mutation_rate):
         indices = random.sample(range(len(cities)), 2)
         cities[indices[0]], cities[indices[1]] = cities[indices[1]], cities[indices[0]]
         route.distance = route.calculate_distance()
+
 
 # Evolutionärer Algorithmus für das TSP
 def tsp_evolutionary_algorithm(cities, population_size, num_generations, tournament_size, mutation_rate):
@@ -100,6 +124,7 @@ def tsp_evolutionary_algorithm(cities, population_size, num_generations, tournam
         print("Generation:", generation + 1, "Beste Strecke:", best_route.distance)
 
     return best_route, best_distances
+
 
 # Testinstanzen aus TSPLIB
 # Beispielinstanz: berlin52
@@ -127,10 +152,12 @@ st70 = [
 ]
 
 # Evolutionärer Algorithmus für Testinstanz berlin52
-best_route_berlin52, best_distances_berlin52 = tsp_evolutionary_algorithm(berlin52, population_size, num_generations, 5, mutation_rate)
+best_route_berlin52, best_distances_berlin52 = tsp_evolutionary_algorithm(berlin52, population_size, num_generations, 5,
+                                                                          mutation_rate)
 
 # Evolutionärer Algorithmus für Testinstanz st70
-best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, population_size, num_generations, 5, mutation_rate)
+best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, population_size, num_generations, 5,
+                                                                  mutation_rate)
 
 # Ausgabe der Ergebnisse
 print("Beste Strecke für berlin52:", best_route_berlin52.distance)
