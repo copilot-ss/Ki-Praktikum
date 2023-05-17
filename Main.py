@@ -54,9 +54,9 @@ def selection(population, tournament_size):
 
 # Rekombination zweier Routen
 def crossover(parent1, parent2):
-    cities = parent1.cities
-    child1 = [None] * len(cities)
-    child2 = [None] * len(cities)
+    cities = parent1.cities.copy()
+    child1 = cities.copy()
+    child2 = cities.copy()
     start_index = random.randint(0, len(cities) - 1)
     end_index = random.randint(start_index + 1, len(cities))
     child1[start_index:end_index] = parent1.cities[start_index:end_index]
@@ -72,23 +72,15 @@ def crossover(parent1, parent2):
         city2 = parent1.cities[index]
 
         if None in child1:
-            if city1 not in child1:
-                child1[child1.index(None)] = city1
+            child1[child1.index(city1)] = None
 
         if None in child2:
-            if city2 not in child2:
-                child2[child2.index(None)] = city2
+            child2[child2.index(city2)] = None
 
         index = (index + 1) % len(cities)
 
-    # Überprüfung und Ersatz von None-Werten
-    for i in range(len(child1)):
-        if child1[i] is None:
-            child1[i] = random.choice([city for city in cities if city not in child1])
-        if child2[i] is None:
-            child2[i] = random.choice([city for city in cities if city not in child2])
-
     return Route(child1), Route(child2)
+
 
 
 
@@ -96,10 +88,11 @@ def crossover(parent1, parent2):
 # Mutation einer Route durch Vertauschen zweier Städte
 def mutation(route, mutation_rate):
     cities = route.cities
-    if random.random() < mutation_rate:
+    if random.random() < mutation_rate and len(cities) >= 2:
         indices = random.sample(range(len(cities)), 2)
         cities[indices[0]], cities[indices[1]] = cities[indices[1]], cities[indices[0]]
         route.distance = route.calculate_distance()
+
 
 
 # Evolutionärer Algorithmus für das TSP
