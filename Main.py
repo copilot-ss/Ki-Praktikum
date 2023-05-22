@@ -1,3 +1,4 @@
+import sys
 
 # population_size muss minimum tournament size sein
 import numpy as np
@@ -6,10 +7,10 @@ import random
 
 
 # population_size muss minimum tournament size sein
-population_size = 10
-mutation_rate = 1
-refraction_rate = 1
-num_generations = 5
+population_size = 100
+mutation_rate = 0.5
+refraction_rate = 0.5
+num_generations = 50
 selection_size = 10
 
 def generate_Berlin52_List():
@@ -120,33 +121,36 @@ def selection(population, selection_size):
     return selected_parents
 
 
+from collections import deque
+
 def refraction(parent1, parent2):
-    cities = parent1.cities.copy()
-    child1 = cities.copy()
-    child2 = cities.copy()
-    start_index = random.randint(0, len(cities) - 1)
-    end_index = random.randint(start_index + 1, len(cities))
-    child1[start_index:end_index] = parent1.cities[start_index:end_index]
-    child2[start_index:end_index] = parent2.cities[start_index:end_index]
-    index = end_index % len(cities)
-    max_attempts = len(cities)
-    for _ in range(max_attempts):
-        if None not in child1 and None not in child2:
-            break
+    size = len(parent1.cities)
+    child1_cities = [None]*size
+    child2_cities = [None]*size
+    if random.random() > refraction_rate:
+        return  parent1,parent2
 
-        city1 = parent2.cities[index]
-        city2 = parent1.cities[index]
+    # Choose random start/end indices for crossover
+    start, end = sorted(random.sample(range(size), 2))
 
-        if None in child1:
-            child1[child1.index(city1)] = None
+    # Copy the segment from parent1 to child1 and vice versa
+    child1_cities[start:end] = parent1.cities[start:end]
+    child2_cities[start:end] = parent2.cities[start:end]
 
-        if None in child2:
-            child2[child2.index(city2)] = None
+    # Create sets for fast lookup
+    child1_set = set(child1_cities[start:end])
+    child2_set = set(child2_cities[start:end])
 
-        index = (index + 1) % len(cities)
+    # Create queues of the remaining cities in the order they appear in the parents
+    parent1_remaining = deque(x for x in parent2.cities if x not in child1_set)
+    parent2_remaining = deque(x for x in parent1.cities if x not in child2_set)
 
-    return Route(child1), Route(child2)
+    # Fill the remaining positions in the children’s route
+    for i in list(range(start)) + list(range(end, size)):
+        child1_cities[i] = parent1_remaining.popleft()
+        child2_cities[i] = parent2_remaining.popleft()
 
+    return Route(child1_cities), Route(child2_cities)
 
 def mutation(route, mutation_rate):
     cities = route.cities
@@ -203,8 +207,8 @@ berlin52 = generate_Berlin52_List()
 
 st70 = generate_ST70_List()
 
-# Evolutionärer Algorithmus für Testinstanz berlin52 best_route_berlin52, best_distances_berlin52 =
-# tsp_evolutionary_algorithm(berlin52, population_size, num_generations, selection_size, mutation_rate)
+# Evolutionärer Algorithmus für Testinstanz berlin52
+#best_route_berlin52, best_distances_berlin52 =  tsp_evolutionary_algorithm(berlin52, population_size, num_generations, selection_size, mutation_rate)
 
 # Evolutionärer Algorithmus für Testinstanz st70
 best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, population_size, num_generations,
@@ -216,9 +220,9 @@ best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, populati
 # print("Beste Strecke für st70:", best_route_st70.distance)
 
 # Darstellung der Konvergenz der besten Strecke
-# plt.plot(best_distances_berlin52, label="berlin52")
-# plt.plot(best_distances_st70, label="st70")
-# plt.xlabel("Generation")
-# plt.ylabel("Beste Strecke")
-# plt.legend()
-# plt.show()
+#plt.plot(best_distances_berlin52, label="berlin52")
+plt.plot(best_distances_st70, label="st70")
+plt.xlabel("Generation")
+plt.ylabel("Beste Strecke")
+plt.legend()
+plt.show()
