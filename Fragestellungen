@@ -13,14 +13,13 @@ Die Reihenfolge der Städte in der Liste gibt die Reihenfolge an, in der sie bes
 3.
 Welche Variationsoperatoren haben sie gewählt? Begründen sie ihre jeweiligen Entscheidungen.
 Der Code verwendet den Rekombinationsoperator des Teilordnungscrossovers (Partially Mapped Crossover, PMX) und
-Mutationsoperator des Vertauschens zweier Städte. Beide Operatoren sind für das TSP gut geeignet.
+Mutations-operator des Vertauschens zweier Städte. Beide Operatoren sind für das TSP gut geeignet.
 
 Der PMX-Crossover (Rekombination) ist ein weit verbreiteter Operator für das TSP. Er erzeugt zwei
 Nachkommen, indem er einen Teil der Route von einem Elternteil auf den ersten Nachkommen überträgt
 und die fehlenden Städte in der Reihenfolge des anderen Elternteils ergänzt. Der zweite Nachkomme
 wird durch den Austausch der Elternrollen erzeugt. Der PMX-Crossover fördert die Erhaltung der relativen
 Anordnung von Städten, was für das TSP wichtig ist.
-
 
 Die Mutation besteht darin, zwei zufällig ausgewählte Städte in einer Route zu vertauschen.
 Dieser Operator ermöglicht es, lokale Veränderungen in den Routen vorzunehmen und die Diversität
