@@ -7,10 +7,10 @@ import random
 
 
 # population_size muss minimum tournament size sein
-population_size = 100
-mutation_rate = 0.5
-refraction_rate = 0.5
-num_generations = 50
+population_size = 50
+mutation_rate = 0.2
+refraction_rate = 0.8
+num_generations = 100
 selection_size = 10
 
 def generate_Berlin52_List():
@@ -82,22 +82,41 @@ class Route:
 
 
 # Erzeugen einer zufälligen Route bei einem zufälligem Startpunkt
-def generate_random_route(cities):
-    route = Route(cities)
-    # Stätte in der Liste werden neu angeordnet
-    # random.shuffle(route.cities)
-    new_cities = random.sample(route.cities, len(cities))
+#Option 1:
+def generate_random_route(cities,startingcity):
+    # Der Startpunkt bleibt unverändert
+    start_point = startingcity
+
+    # Shuffle nur die anderen Städte
+    other_cities = cities[1:]
+    new_cities = random.sample(other_cities, len(other_cities))
+
+    # Fügen Sie den Startpunkt am Anfang hinzu
+    new_cities.insert(0, start_point)
+
     return Route(new_cities)
 
 
+
+#Option 1:
+# def generate_random_population(cities, population_size):
+#     population = []
+#     for _ in range(population_size):
+#         route = generate_random_route(cities)
+#         # append fügt einer Liste ein element hinzu, KEINE KONTROLLE
+#         population.append(route)
+#     return population
+
+#Option 2:
 def generate_random_population(cities, population_size):
     population = []
+    index=random.randint(0,len(cities)-1)
+    startingcity = cities[1]
     for _ in range(population_size):
-        route = generate_random_route(cities)
+        route = generate_random_route(cities, startingcity)
         # append fügt einer Liste ein element hinzu, KEINE KONTROLLE
         population.append(route)
     return population
-
 
 def selection(population, selection_size):
     selected_parents = []
@@ -153,12 +172,12 @@ def refraction(parent1, parent2):
     return Route(child1_cities), Route(child2_cities)
 
 def mutation(route, mutation_rate):
-    cities = route.cities
+    cities = route.cities[1:]  # schließen Sie den Startpunkt aus
     if random.random() < mutation_rate and len(cities) >= 2:
         indices = random.sample(range(len(cities)), 2)
         cities[indices[0]], cities[indices[1]] = cities[indices[1]], cities[indices[0]]
+        route.cities[1:] = cities
         route.distance = route.calculate_distance()
-
 
 def test_Route(route, original):
     cities = route.cities
@@ -178,20 +197,27 @@ def test_Route(route, original):
 # Evolutionärer Algorithmus für das TSP
 def tsp_evolutionary_algorithm(cities, population_size, num_generations, selection_size, mutation_rate):
     population = generate_random_population(cities, population_size)
+    plot_route(population[0], "Erste Route") #Plotting
     best_distances = []
     best_route = None
+    mu = population_size
+    lambda_ = 2 * population_size  # Sie können diesen Wert entsprechend ändern
 
     for generation in range(num_generations):
         new_population = []
 
-        while len(new_population) < population_size:
+        while len(new_population) < lambda_:
             parents = selection(population, selection_size)
             child1, child2 = refraction(parents[0], parents[1])
             mutation(child1, mutation_rate)
             mutation(child2, mutation_rate)
             new_population.extend([child1, child2])
 
-        population = new_population
+        # $(\mu + \lambda)$ Selektion: wähle die besten $\mu$ aus der Gesamtpopulation (Eltern + Nachkommen)
+        combined_population = population + new_population
+        combined_population.sort(key=lambda x: x.distance)
+        population = combined_population[:mu]
+
         best_route = min(population, key=lambda route: route.distance)
         best_distances.append(best_route.distance)
         print(best_route.cities)
@@ -203,26 +229,53 @@ def tsp_evolutionary_algorithm(cities, population_size, num_generations, selecti
     return best_route, best_distances
 
 
+
+
+
+
+def plot_route(route, title='Route'):
+    # Route als Punkte darstellen
+    cities = route.cities
+    plt.scatter([city[0] for city in cities], [city[1] for city in cities], color='red')
+
+    # Startpunkt besonders darstellen
+    start_city = cities[0]
+    plt.scatter(start_city[0], start_city[1], color='green', s=100)  # s kontrolliert die Größe des Punkts
+
+    # Route durch Linien darstellen
+    for i in range(-1, len(cities) - 1):
+        plt.plot((cities[i][0], cities[i + 1][0]), (cities[i][1], cities[i + 1][1]), 'b-')
+
+    # Titel setzen
+    plt.title(title)
+
+    # Anzeigen des Plots
+    plt.show()
+
+
+#testen:
+
 berlin52 = generate_Berlin52_List()
 
 st70 = generate_ST70_List()
 
 # Evolutionärer Algorithmus für Testinstanz berlin52
-#best_route_berlin52, best_distances_berlin52 =  tsp_evolutionary_algorithm(berlin52, population_size, num_generations, selection_size, mutation_rate)
+best_route_berlin52, best_distances_berlin52 =  tsp_evolutionary_algorithm(berlin52, population_size, num_generations, selection_size, mutation_rate)
 
 # Evolutionärer Algorithmus für Testinstanz st70
-best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, population_size, num_generations,
-                                                                  selection_size,
-                                                                  mutation_rate)
+# best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, population_size, num_generations,
+#                                                                   selection_size,
+#                                                                   mutation_rate)
 
 # Ausgabe der Ergebnisse
 # print("Beste Strecke für berlin52:", best_route_berlin52.distance)
 # print("Beste Strecke für st70:", best_route_st70.distance)
 
 # Darstellung der Konvergenz der besten Strecke
-#plt.plot(best_distances_berlin52, label="berlin52")
-plt.plot(best_distances_st70, label="st70")
+plt.plot(best_distances_berlin52, label="berlin52")
+# plt.plot(best_distances_st70, label="st70")
 plt.xlabel("Generation")
 plt.ylabel("Beste Strecke")
 plt.legend()
 plt.show()
+plot_route(best_route_berlin52,"Letzte Route")
