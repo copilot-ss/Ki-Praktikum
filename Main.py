@@ -263,19 +263,20 @@ st70 = generate_ST70_List()
 best_route_berlin52, best_distances_berlin52 =  tsp_evolutionary_algorithm(berlin52, population_size, num_generations, selection_size, mutation_rate)
 
 # Evolutionärer Algorithmus für Testinstanz st70
-# best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, population_size, num_generations,
-#                                                                   selection_size,
-#                                                                   mutation_rate)
+best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, population_size, num_generations,
+                                                                  selection_size,
+                                                                  mutation_rate)
 
 # Ausgabe der Ergebnisse
 # print("Beste Strecke für berlin52:", best_route_berlin52.distance)
 # print("Beste Strecke für st70:", best_route_st70.distance)
 
 # Darstellung der Konvergenz der besten Strecke
-plt.plot(best_distances_berlin52, label="berlin52")
+# plt.plot(best_distances_berlin52, label="berlin52")
 # plt.plot(best_distances_st70, label="st70")
 plt.xlabel("Generation")
 plt.ylabel("Beste Strecke")
 plt.legend()
 plt.show()
 plot_route(best_route_berlin52,"Letzte Route")
+plot_route(best_route_st70,"Letzte Route")
