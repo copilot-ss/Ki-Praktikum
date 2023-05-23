@@ -83,17 +83,15 @@ class Route:
 
 # Erzeugen einer zufälligen Route bei einem zufälligem Startpunkt
 #Option 1:
-def generate_random_route(cities,startingcity):
-    # Der Startpunkt bleibt unverändert
-    start_point = startingcity
-
+def generate_random_route(cities, startingcity):
     # Shuffle nur die anderen Städte
-    other_cities = cities[1:]
-    new_cities = random.sample(other_cities, len(other_cities))
+    for i in range(len(cities)-1):
+        if cities[i] == startingcity:
+            cities.pop(i)
+    new_cities = random.sample(cities, len(cities))
 
     # Fügen Sie den Startpunkt am Anfang hinzu
-    new_cities.insert(0, start_point)
-
+    new_cities.insert(0, startingcity)
     return Route(new_cities)
 
 
@@ -111,7 +109,7 @@ def generate_random_route(cities,startingcity):
 def generate_random_population(cities, population_size):
     population = []
     index=random.randint(0,len(cities)-1)
-    startingcity = cities[1]
+    startingcity = cities[index]
     for _ in range(population_size):
         route = generate_random_route(cities, startingcity)
         # append fügt einer Liste ein element hinzu, KEINE KONTROLLE
@@ -156,13 +154,15 @@ def refraction(parent1, parent2):
     child1_cities[start:end] = parent1.cities[start:end]
     child2_cities[start:end] = parent2.cities[start:end]
 
+
     # Create sets for fast lookup
     child1_set = set(child1_cities[start:end])
     child2_set = set(child2_cities[start:end])
 
+
     # Create queues of the remaining cities in the order they appear in the parents
-    parent1_remaining = deque(x for x in parent2.cities if x not in child1_set)
-    parent2_remaining = deque(x for x in parent1.cities if x not in child2_set)
+    parent1_remaining = deque(x for x in parent1.cities if x not in child1_set )
+    parent2_remaining = deque(x for x in parent2.cities if x not in child2_set )
 
     # Fill the remaining positions in the children’s route
     for i in list(range(start)) + list(range(end, size)):
