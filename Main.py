@@ -4,6 +4,7 @@ import sys
 import numpy as np
 import matplotlib.pyplot as plt
 import random
+from collections import deque
 
 
 # population_size muss minimum tournament size sein
@@ -82,7 +83,6 @@ class Route:
 
 
 # Erzeugen einer zufälligen Route bei einem zufälligem Startpunkt
-#Option 1:
 def generate_random_route(cities, startingcity):
     # Shuffle nur die anderen Städte
     for i in range(len(cities)-1):
@@ -96,75 +96,54 @@ def generate_random_route(cities, startingcity):
 
 
 
-#Option 1:
-# def generate_random_population(cities, population_size):
-#     population = []
-#     for _ in range(population_size):
-#         route = generate_random_route(cities)
-#         # append fügt einer Liste ein element hinzu, KEINE KONTROLLE
-#         population.append(route)
-#     return population
 
-#Option 2:
 def generate_random_population(cities, population_size):
     population = []
     index=random.randint(0,len(cities)-1)
     startingcity = cities[index]
     for _ in range(population_size):
         route = generate_random_route(cities, startingcity)
-        # append fügt einer Liste ein element hinzu, KEINE KONTROLLE
         population.append(route)
     return population
 
 def selection(population, selection_size):
-    selected_parents = []
     tournament = random.sample(population, selection_size)
-    index = None
-    best_route = None
-    j = 0
-    while j < 2:
-        for i in range(len(tournament) - 1):
-            if best_route is None:
-                index = 0
-                best_route = tournament[0]
-            elif tournament[i].distance < best_route.distance:
-                index = i
-                best_route = tournament[i]
+    selected_parents = []
+
+    for _ in range(2):
+        best_route = min(tournament, key=lambda route: route.distance)
         selected_parents.append(best_route)
-        del tournament[index]
-        index = None
-        best_route = None
-        j += 1
+        tournament.remove(best_route)
+
     return selected_parents
 
 
-from collections import deque
 
-def refraction(parent1, parent2):
+
+def crossover(parent1, parent2):
     size = len(parent1.cities)
     child1_cities = [None]*size
     child2_cities = [None]*size
     if random.random() > refraction_rate:
         return  parent1,parent2
 
-    # Choose random start/end indices for crossover
+    # Random start und end wird gewählt um zufälligen teil aus Parent zu übernehmen
     start, end = sorted(random.sample(range(size), 2))
 
-    # Copy the segment from parent1 to child1 and vice versa
     child1_cities[start:end] = parent1.cities[start:end]
     child2_cities[start:end] = parent2.cities[start:end]
 
 
-    # Create sets for fast lookup
+    # Sets erstellen zum prüfen
     child1_set = set(child1_cities[start:end])
     child2_set = set(child2_cities[start:end])
 
 
-    # Create queues of the remaining cities in the order they appear in the parents
-    parent1_remaining = deque(x for x in parent1.cities if x not in child1_set )
-    parent2_remaining = deque(x for x in parent2.cities if x not in child2_set )
+    # Queues erstellen in der selben reihenfolge wie das parent
+    parent1_remaining = deque(x for x in parent2.cities if x not in child1_set )
+    parent2_remaining = deque(x for x in parent1.cities if x not in child2_set )
 
-    # Fill the remaining positions in the children’s route
+    # Restlichen Cities auffüllen
     for i in list(range(start)) + list(range(end, size)):
         child1_cities[i] = parent1_remaining.popleft()
         child2_cities[i] = parent2_remaining.popleft()
@@ -198,6 +177,7 @@ def test_Route(route, original):
 def tsp_evolutionary_algorithm(cities, population_size, num_generations, selection_size, mutation_rate):
     population = generate_random_population(cities, population_size)
     plot_route(population[0], "Erste Route") #Plotting
+    print("Erste Strecke:", population[0].distance)
     best_distances = []
     best_route = None
     mu = population_size
@@ -208,7 +188,7 @@ def tsp_evolutionary_algorithm(cities, population_size, num_generations, selecti
 
         while len(new_population) < lambda_:
             parents = selection(population, selection_size)
-            child1, child2 = refraction(parents[0], parents[1])
+            child1, child2 = crossover(parents[0], parents[1])
             mutation(child1, mutation_rate)
             mutation(child2, mutation_rate)
             new_population.extend([child1, child2])
@@ -220,9 +200,9 @@ def tsp_evolutionary_algorithm(cities, population_size, num_generations, selecti
 
         best_route = min(population, key=lambda route: route.distance)
         best_distances.append(best_route.distance)
-        print(best_route.cities)
         if test_Route(best_route, cities):
-            print("Generation:", generation + 1, "Beste Strecke:", best_route.distance)
+        # print("Generation:", generation + 1, "Beste Strecke:", best_route.distance)
+            None
         else:
             print("Keine gültige Route wurde gebildet")
 
@@ -268,15 +248,9 @@ best_route_st70, best_distances_st70 = tsp_evolutionary_algorithm(st70, populati
                                                                   mutation_rate)
 
 # Ausgabe der Ergebnisse
-# print("Beste Strecke für berlin52:", best_route_berlin52.distance)
-# print("Beste Strecke für st70:", best_route_st70.distance)
+print("Beste Strecke für berlin52:", best_route_berlin52.distance)
+print("Beste Strecke für st70:", best_route_st70.distance)
 
-# Darstellung der Konvergenz der besten Strecke
-# plt.plot(best_distances_berlin52, label="berlin52")
-# plt.plot(best_distances_st70, label="st70")
-plt.xlabel("Generation")
-plt.ylabel("Beste Strecke")
-plt.legend()
-plt.show()
+# Beste Routen grafisch darstellen
 plot_route(best_route_berlin52,"Letzte Route")
 plot_route(best_route_st70,"Letzte Route")
